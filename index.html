@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meme Generator Zaki Edition 😭🔥</title>
+    <meta name="description"
+        content="Bikin meme keren dan lucu dengan Meme Generator Zaki Edition. Upload gambar atau pilih template meme populer!">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(255, 102, 0, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgShift 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgShift {
+            0% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 20px 10px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6600, #ff9500, #ffcc00, #ff6600);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease infinite;
+            text-shadow: none;
+            letter-spacing: -1px;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .header p {
+            color: #888;
+            font-size: 0.95em;
+            margin-top: 6px;
+        }
+
+        /* Main layout */
+        .app-layout {
+            display: flex;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px 40px;
+            align-items: flex-start;
+        }
+
+        /* Panels */
+        .panel {
+            background: rgba(22, 22, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .canvas-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .controls-panel {
+            width: 340px;
+            flex-shrink: 0;
+        }
+
+        /* Meme Canvas */
+        .meme-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 420px;
+            background: #1a1a24;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: crosshair;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meme-canvas-wrapper .placeholder-msg {
+            color: #555;
+            font-size: 1.1em;
+            text-align: center;
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .meme-canvas-wrapper .placeholder-msg span {
+            font-size: 2.5em;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        #memeImage {
+            max-width: 100%;
+            max-height: 500px;
+            display: block;
+            margin: 0 auto;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .meme-canvas-wrapper img[style*="filter"] {
+            transition: filter 0.3s ease;
+        }
+
+        /* Draggable text overlays */
+        .meme-text-overlay {
+            position: absolute;
+            color: #ffffff;
+            font-size: 2em;
+            font-weight: 900;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: all;
+            user-select: none;
+            cursor: move;
+            padding: 4px 12px;
+            line-height: 1.2;
+            -webkit-text-stroke: 2px #000;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+                0 2px 0 #000, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000;
+            z-index: 10;
+            transition: transform 0.05s;
+        }
+
+        .meme-text-overlay:hover {
+            outline: 2px dashed rgba(255, 165, 0, 0.7);
+            outline-offset: 4px;
+        }
+
+        .meme-text-overlay.dragging {
+            transform: scale(1.03);
+            outline: 2px solid #ff6600;
+            outline-offset: 4px;
+        }
+
+        /* Sticker overlays */
+        .sticker-overlay {
+            position: absolute;
+            font-size: 3em;
+            cursor: move;
+            user-select: none;
+            z-index: 11;
+            transition: transform 0.05s;
+            line-height: 1;
+        }
+
+        .sticker-overlay:hover {
+            outline: 2px dashed rgba(255, 165, 0, 0.5);
+            outline-offset: 2px;
+        }
+
+        .sticker-overlay.dragging {
+            transform: scale(1.1);
+        }
+
+        /* Canvas action buttons */
+        .canvas-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .canvas-actions button {
+            flex: 1;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border: none;
+            background: transparent;
+            color: #888;
+            font-size: 0.75em;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tab-btn span.tab-icon {
+            font-size: 1.4em;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.2), rgba(255, 153, 0, 0.15));
+            color: #ff9500;
+            box-shadow: 0 2px 12px rgba(255, 102, 0, 0.15);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: #bbb;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8em;
+            color: #999;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            border-color: rgba(255, 102, 0, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #ff6600, #ff9500);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: linear-gradient(135deg, #ff7711, #ffa622);
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: transparent;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6600, #ff9500);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(255, 102, 0, 0.4);
+            transition: transform 0.15s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6600, #ff9500);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255, 102, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.07);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-sm {
+            padding: 7px 12px;
+            font-size: 0.8em;
+        }
+
+        /* Template Gallery */
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .template-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .template-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .template-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .template-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+            aspect-ratio: 1;
+            background: #1a1a24;
+        }
+
+        .template-card:hover {
+            border-color: #ff6600;
+            transform: scale(1.04);
+            box-shadow: 0 4px 16px rgba(255, 102, 0, 0.2);
+        }
+
+        .template-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .template-card .template-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+            color: #fff;
+            font-size: 0.6em;
+            font-weight: 600;
+            padding: 16px 6px 5px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Color + range inline */
+        .inline-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inline-control input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            font-size: 0.8em;
+            color: #999;
+            min-width: 36px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Text list */
+        .text-list-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .text-list-item:hover {
+            border-color: rgba(255, 102, 0, 0.2);
+        }
+
+        .text-list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .text-list-header span {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #ff9500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .text-list-header button {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .text-list-header button:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .text-props {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .text-props .form-group {
+            margin-bottom: 0;
+        }
+
+        /* Sticker grid */
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .sticker-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            font-size: 1.6em;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .sticker-btn:hover {
+            background: rgba(255, 102, 0, 0.15);
+            border-color: rgba(255, 102, 0, 0.3);
+            transform: scale(1.15);
+        }
+
+        /* Filters */
+        .filter-control {
+            margin-bottom: 12px;
+        }
+
+        .filter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .filter-label span:first-child {
+            font-size: 0.8em;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .filter-label span:last-child {
+            font-size: 0.8em;
+            color: #ff9500;
+            font-weight: 600;
+        }
+
+        /* Section dividers */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08), transparent);
+            margin: 16px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .app-layout {
+                flex-direction: column;
+            }
+
+            .controls-panel {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .template-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .sticker-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .text-props {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #ff6600, #ff9500);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 8px 32px rgba(255, 102, 0, 0.4);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Loading spinner on template cards */
+        .template-card.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .template-card.loading::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #ff6600;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .delete-sticker-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7em;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 12;
+            line-height: 1;
+        }
+
+        .sticker-overlay:hover .delete-sticker-btn {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🔥 Meme Generator Zaki Edition 😭</h1>
+        <p>Bikin meme paling epic se-Indonesia • Upload, pilih template, custom sesuka hati!</p>
+    </div>
+
+    <div class="app-layout">
+        <!-- Canvas Panel -->
+        <div class="panel canvas-panel">
+            <div class="meme-canvas-wrapper" id="memeCanvas">
+                <p class="placeholder-msg" id="placeholderMsg">
+                    <span>🖼️</span>
+                    Upload gambar atau pilih template di sebelah kanan
+                </p>
+                <!-- Image will be inserted here -->
+            </div>
+            <div class="canvas-actions">
+                <button class="btn btn-primary" onclick="downloadMeme()" id="downloadBtn">
+                    📥 Download Meme
+                </button>
+                <button class="btn btn-secondary" onclick="resetCanvas()" id="resetBtn">
+                    🗑️ Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="panel controls-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('upload')" id="tabUpload">
+                    <span class="tab-icon">📤</span>
+                    Upload
+                </button>
+                <button class="tab-btn" onclick="switchTab('templates')" id="tabTemplates">
+                    <span class="tab-icon">🎭</span>
+                    Template
+                </button>
+                <button class="tab-btn" onclick="switchTab('text')" id="tabText">
+                    <span class="tab-icon">✏️</span>
+                    Teks
+                </button>
+                <button class="tab-btn" onclick="switchTab('filters')" id="tabFilters">
+                    <span class="tab-icon">🎨</span>
+                    Filter
+                </button>
+                <button class="tab-btn" onclick="switchTab('stickers')" id="tabStickers">
+                    <span class="tab-icon">😂</span>
+                    Stiker
+                </button>
+            </div>
+
+            <!-- Upload Tab -->
+            <div class="tab-content active" id="tab-upload">
+                <div class="form-group">
+                    <label>Upload dari Perangkat</label>
+                    <input type="file" id="imageUpload" accept="image/*">
+                </div>
+                <div class="section-divider"></div>
+                <div class="form-group">
+                    <label>Atau Paste URL Gambar</label>
+                    <input type="text" id="imageUrl" placeholder="https://contoh.com/gambar.jpg">
+                </div>
+                <button class="btn btn-primary" onclick="loadImageFromUrl()" id="loadUrlBtn">🔗 Load dari URL</button>
+            </div>
+
+            <!-- Templates Tab -->
+            <div class="tab-content" id="tab-templates">
+                <div class="form-group">
+                    <label>Pilih Template Meme Populer</label>
+                </div>
+                <div class="template-grid" id="templateGrid">
+                    <!-- Templates loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Text Tab -->
+            <div class="tab-content" id="tab-text">
+                <div id="textListContainer">
+                    <!-- Text items will be listed here -->
+                </div>
+                <button class="btn btn-secondary" onclick="addTextOverlay()" id="addTextBtn" style="margin-top: 8px;">
+                    ➕ Tambah Teks Baru
+                </button>
+            </div>
+
+            <!-- Filters Tab -->
+            <div class="tab-content" id="tab-filters">
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>☀️ Brightness</span>
+                        <span id="brightnessVal">100%</span>
+                    </div>
+                    <input type="range" id="filterBrightness" min="0" max="200" value="100" oninput="applyFilters()">
+                </div>
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>🔲 Contrast</span>
+                        <span id="contrastVal">100%</span>
+                    </div>
+                    <input type="range" id="filterContrast" min="0" max="200" value="100" oninput="applyFilters()">
+                </div>
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>🌈 Saturation</span>
+                        <span id="saturationVal">100%</span>
+                    </div>
+                    <input type="range" id="filterSaturation" min="0" max="200" value="100" oninput="applyFilters()">
+                </div>
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>🩶 Grayscale</span>
+                        <span id="grayscaleVal">0%</span>
+                    </div>
+                    <input type="range" id="filterGrayscale" min="0" max="100" value="0" oninput="applyFilters()">
+                </div>
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>🌫️ Blur</span>
+                        <span id="blurVal">0px</span>
+                    </div>
+                    <input type="range" id="filterBlur" min="0" max="10" value="0" step="0.5" oninput="applyFilters()">
+                </div>
+                <div class="filter-control">
+                    <div class="filter-label">
+                        <span>🔄 Hue Rotate</span>
+                        <span id="hueVal">0°</span>
+                    </div>
+                    <input type="range" id="filterHue" min="0" max="360" value="0" oninput="applyFilters()">
+                </div>
+                <div class="section-divider"></div>
+                <button class="btn btn-secondary" onclick="resetFilters()" id="resetFiltersBtn">🔄 Reset Semua
+                    Filter</button>
+            </div>
+
+            <!-- Stickers Tab -->
+            <div class="tab-content" id="tab-stickers">
+                <div class="form-group">
+                    <label>Pilih Stiker / Emoji</label>
+                </div>
+                <div class="sticker-grid" id="stickerGrid">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="section-divider"></div>
+                <div class="form-group">
+                    <label>Ukuran Stiker</label>
+                    <div class="inline-control">
+                        <input type="range" id="stickerSize" min="20" max="120" value="48"
+                            oninput="document.getElementById('stickerSizeVal').textContent = this.value + 'px'">
+                        <span class="range-value" id="stickerSizeVal">48px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ===========================
+        // STATE
+        // ===========================
+        const canvas = document.getElementById('memeCanvas');
+        const placeholderMsg = document.getElementById('placeholderMsg');
+        let textOverlays = [];
+        let textIdCounter = 0;
+        let currentImage = null; // <img> element
+
+        // ===========================
+        // TABS
+        // ===========================
+        function switchTab(name) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+            // Find matching button
+            const btnMap = { upload: 'tabUpload', templates: 'tabTemplates', text: 'tabText', filters: 'tabFilters', stickers: 'tabStickers' };
+            document.getElementById(btnMap[name]).classList.add('active');
+        }
+
+        // ===========================
+        // TOAST
+        // ===========================
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ===========================
+        // IMAGE LOADING
+        // ===========================
+        function setImage(src) {
+            // Remove old image
+            if (currentImage) currentImage.remove();
+
+            const img = document.createElement('img');
+            img.id = 'memeImage';
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                placeholderMsg.style.display = 'none';
+                applyFilters();
+                showToast('Gambar berhasil dimuat! 🔥');
+            };
+            img.onerror = () => {
+                // Try without crossOrigin for local files
+                img.removeAttribute('crossorigin');
+                img.src = src;
+                img.onerror = () => {
+                    showToast('Gagal memuat gambar 😢');
+                    placeholderMsg.style.display = 'block';
+                };
+            };
+            img.src = src;
+            img.draggable = false;
+            currentImage = img;
+            canvas.insertBefore(img, canvas.firstChild);
+        }
+
+        // Upload from file
+        document.getElementById('imageUpload').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => setImage(ev.target.result);
+            reader.readAsDataURL(file);
+        };
+
+        // Load from URL
+        function loadImageFromUrl() {
+            const url = document.getElementById('imageUrl').value.trim();
+            if (!url) {
+                showToast('Masukin URL dulu bro! 🙄');
+                return;
+            }
+            setImage(url);
+        }
+
+        // ===========================
+        // MEME TEMPLATES
+        // ===========================
+        const memeTemplates = [
+            { name: "Drake Hotline Bling", url: "https://i.imgflip.com/30b1gx.jpg" },
+            { name: "Two Buttons", url: "https://i.imgflip.com/1g8my4.jpg" },
+            { name: "Change My Mind", url: "https://i.imgflip.com/24y43o.jpg" },
+            { name: "Expanding Brain", url: "https://i.imgflip.com/1jwhww.jpg" },
+            { name: "Surprised Pikachu", url: "https://i.imgflip.com/2kbn1e.jpg" },
+            { name: "One Does Not Simply", url: "https://i.imgflip.com/1bij.jpg" },
+            { name: "Distracted Boyfriend", url: "https://i.imgflip.com/1ur9b0.jpg" },
+            { name: "Waiting Skeleton", url: "https://i.imgflip.com/2fm6x.jpg" },
+            { name: "This Is Fine", url: "https://i.imgflip.com/wxica.jpg" },
+            { name: "Buff Doge vs Cheems", url: "https://i.imgflip.com/43a45p.png" },
+            { name: "Left Exit 12 Off Ramp", url: "https://i.imgflip.com/22bdq6.jpg" },
+            { name: "Batman Slapping Robin", url: "https://i.imgflip.com/9ehk.jpg" },
+            { name: "Bernie I Am Once Again", url: "https://i.imgflip.com/3oevdk.jpg" },
+            { name: "Woman Yelling at Cat", url: "https://i.imgflip.com/345v97.jpg" },
+            { name: "Roll Safe Think", url: "https://i.imgflip.com/1h7in3.jpg" },
+            { name: "Ancient Aliens", url: "https://i.imgflip.com/26am.jpg" },
+            { name: "Mocking SpongeBob", url: "https://i.imgflip.com/1otk96.jpg" },
+            { name: "Is This A Pigeon?", url: "https://i.imgflip.com/1o00in.jpg" },
+            { name: "Hide the Pain Harold", url: "https://i.imgflip.com/gk5el.jpg" },
+            { name: "Disaster Girl", url: "https://i.imgflip.com/23ls.jpg" },
+            { name: "Success Kid", url: "https://i.imgflip.com/1bhk.jpg" },
+            { name: "Futurama Fry", url: "https://i.imgflip.com/1bgw.jpg" },
+            { name: "Confession Bear", url: "https://i.imgflip.com/1bh8.jpg" },
+            { name: "Third World Skeptical Kid", url: "https://i.imgflip.com/1bip.jpg" },
+        ];
+
+        function loadTemplates() {
+            const grid = document.getElementById('templateGrid');
+            memeTemplates.forEach((tmpl, i) => {
+                const card = document.createElement('div');
+                card.className = 'template-card loading';
+                card.title = tmpl.name;
+                card.onclick = () => {
+                    setImage(tmpl.url);
+                    switchTab('text');
+                };
+
+                const img = document.createElement('img');
+                img.crossOrigin = 'anonymous';
+                img.loading = 'lazy';
+                img.alt = tmpl.name;
+                img.onload = () => card.classList.remove('loading');
+                img.onerror = () => {
+                    card.classList.remove('loading');
+                    img.src = '';
+                    card.style.background = '#2a2a34';
+                };
+                img.src = tmpl.url;
+
+                const label = document.createElement('div');
+                label.className = 'template-name';
+                label.textContent = tmpl.name;
+
+                card.appendChild(img);
+                card.appendChild(label);
+                grid.appendChild(card);
+            });
+        }
+
+        // ===========================
+        // TEXT OVERLAYS
+        // ===========================
+        function addTextOverlay(defaultText = '', position = 'center') {
+            textIdCounter++;
+            const id = textIdCounter;
+
+            const el = document.createElement('div');
+            el.className = 'meme-text-overlay';
+            el.id = 'textOverlay_' + id;
+            el.textContent = defaultText || 'TEKS ' + id;
+
+            // Position
+            if (position === 'top') {
+                el.style.top = '10px';
+                el.style.left = '50%';
+                el.style.transform = 'translateX(-50%)';
+            } else if (position === 'bottom') {
+                el.style.bottom = '10px';
+                el.style.left = '50%';
+                el.style.transform = 'translateX(-50%)';
+            } else {
+                el.style.top = (30 + (textOverlays.length * 50)) + 'px';
+                el.style.left = '50%';
+                el.style.transform = 'translateX(-50%)';
+            }
+
+            canvas.appendChild(el);
+            makeDraggable(el);
+
+            const overlayData = {
+                id,
+                el,
+                text: defaultText || 'TEKS ' + id,
+                fontSize: 32,
+                fontFamily: 'Impact',
+                color: '#ffffff',
+                strokeColor: '#000000',
+                strokeWidth: 2
+            };
+            textOverlays.push(overlayData);
+            renderTextList();
+            return overlayData;
+        }
+
+        function removeTextOverlay(id) {
+            const idx = textOverlays.findIndex(t => t.id === id);
+            if (idx < 0) return;
+            textOverlays[idx].el.remove();
+            textOverlays.splice(idx, 1);
+            renderTextList();
+        }
+
+        function updateOverlayProps(id) {
+            const data = textOverlays.find(t => t.id === id);
+            if (!data) return;
+
+            const textInput = document.getElementById('textInput_' + id);
+            const sizeInput = document.getElementById('fontSize_' + id);
+            const fontSelect = document.getElementById('fontFamily_' + id);
+            const colorInput = document.getElementById('textColor_' + id);
+            const strokeInput = document.getElementById('strokeColor_' + id);
+
+            if (textInput) {
+                data.text = textInput.value;
+                data.el.textContent = textInput.value.toUpperCase() || 'TEKS ' + id;
+            }
+            if (sizeInput) {
+                data.fontSize = parseInt(sizeInput.value);
+                data.el.style.fontSize = data.fontSize + 'px';
+                const sizeVal = document.getElementById('fontSizeVal_' + id);
+                if (sizeVal) sizeVal.textContent = data.fontSize + 'px';
+            }
+            if (fontSelect) {
+                data.fontFamily = fontSelect.value;
+                data.el.style.fontFamily = data.fontFamily;
+            }
+            if (colorInput) {
+                data.color = colorInput.value;
+                data.el.style.color = data.color;
+            }
+            if (strokeInput) {
+                data.strokeColor = strokeInput.value;
+                data.el.style.webkitTextStroke = `2px ${data.strokeColor}`;
+                data.el.style.textShadow = `2px 2px 0 ${data.strokeColor}, -2px -2px 0 ${data.strokeColor}, 2px -2px 0 ${data.strokeColor}, -2px 2px 0 ${data.strokeColor}, 0 2px 0 ${data.strokeColor}, 0 -2px 0 ${data.strokeColor}, 2px 0 0 ${data.strokeColor}, -2px 0 0 ${data.strokeColor}`;
+            }
+        }
+
+        function renderTextList() {
+            const container = document.getElementById('textListContainer');
+            container.innerHTML = '';
+            textOverlays.forEach(data => {
+                const item = document.createElement('div');
+                item.className = 'text-list-item';
+                item.innerHTML = `
+                    <div class="text-list-header">
+                        <span>Teks #${data.id}</span>
+                        <button onclick="removeTextOverlay(${data.id})" title="Hapus">✕</button>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="textInput_${data.id}" value="${escapeHtml(data.text)}" 
+                               placeholder="Ketik teks meme..." oninput="updateOverlayProps(${data.id})">
+                    </div>
+                    <div class="text-props">
+                        <div class="form-group">
+                            <label>Ukuran</label>
+                            <div class="inline-control">
+                                <input type="range" id="fontSize_${data.id}" min="14" max="80" value="${data.fontSize}" oninput="updateOverlayProps(${data.id})">
+                                <span class="range-value" id="fontSizeVal_${data.id}">${data.fontSize}px</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Font</label>
+                            <select id="fontFamily_${data.id}" onchange="updateOverlayProps(${data.id})">
+                                <option value="Impact" ${data.fontFamily === 'Impact' ? 'selected' : ''}>Impact</option>
+                                <option value="'Arial Black', sans-serif" ${data.fontFamily.includes('Arial') ? 'selected' : ''}>Arial Black</option>
+                                <option value="'Comic Sans MS', cursive" ${data.fontFamily.includes('Comic') ? 'selected' : ''}>Comic Sans</option>
+                                <option value="'Inter', sans-serif" ${data.fontFamily.includes('Inter') ? 'selected' : ''}>Inter</option>
+                                <option value="'Courier New', monospace" ${data.fontFamily.includes('Courier') ? 'selected' : ''}>Courier</option>
+                                <option value="Georgia, serif" ${data.fontFamily.includes('Georgia') ? 'selected' : ''}>Georgia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Warna Teks</label>
+                            <input type="color" id="textColor_${data.id}" value="${data.color}" oninput="updateOverlayProps(${data.id})">
+                        </div>
+                        <div class="form-group">
+                            <label>Warna Stroke</label>
+                            <input type="color" id="strokeColor_${data.id}" value="${data.strokeColor}" oninput="updateOverlayProps(${data.id})">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ===========================
+        // DRAG (MOUSE + TOUCH)
+        // ===========================
+        let dragState = { el: null, offsetX: 0, offsetY: 0 };
+
+        function makeDraggable(el) {
+            // Mouse
+            el.addEventListener('mousedown', onDragStart);
+            // Touch
+            el.addEventListener('touchstart', onDragStart, { passive: false });
+        }
+
+        function onDragStart(e) {
+            e.preventDefault();
+            const el = e.currentTarget;
+            el.classList.add('dragging');
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = el.getBoundingClientRect();
+
+            dragState.el = el;
+            dragState.offsetX = clientX - rect.left;
+            dragState.offsetY = clientY - rect.top;
+
+            // Remove transform translateX so positioning works with left
+            el.style.transform = 'none';
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!dragState.el) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const canvasRect = canvas.getBoundingClientRect();
+
+            let newX = clientX - canvasRect.left - dragState.offsetX;
+            let newY = clientY - canvasRect.top - dragState.offsetY;
+
+            // Clamp to canvas bounds
+            newX = Math.max(0, Math.min(newX, canvas.offsetWidth - dragState.el.offsetWidth));
+            newY = Math.max(0, Math.min(newY, canvas.offsetHeight - dragState.el.offsetHeight));
+
+            dragState.el.style.left = newX + 'px';
+            dragState.el.style.top = newY + 'px';
+            dragState.el.style.bottom = 'auto';
+            dragState.el.style.right = 'auto';
+        }
+
+        function onDragEnd() {
+            if (dragState.el) {
+                dragState.el.classList.remove('dragging');
+            }
+            dragState.el = null;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+        // ===========================
+        // IMAGE FILTERS
+        // ===========================
+        function applyFilters() {
+            if (!currentImage) return;
+            const b = document.getElementById('filterBrightness').value;
+            const c = document.getElementById('filterContrast').value;
+            const s = document.getElementById('filterSaturation').value;
+            const g = document.getElementById('filterGrayscale').value;
+            const bl = document.getElementById('filterBlur').value;
+            const h = document.getElementById('filterHue').value;
+
+            currentImage.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%) grayscale(${g}%) blur(${bl}px) hue-rotate(${h}deg)`;
+
+            document.getElementById('brightnessVal').textContent = b + '%';
+            document.getElementById('contrastVal').textContent = c + '%';
+            document.getElementById('saturationVal').textContent = s + '%';
+            document.getElementById('grayscaleVal').textContent = g + '%';
+            document.getElementById('blurVal').textContent = bl + 'px';
+            document.getElementById('hueVal').textContent = h + '°';
+        }
+
+        function resetFilters() {
+            document.getElementById('filterBrightness').value = 100;
+            document.getElementById('filterContrast').value = 100;
+            document.getElementById('filterSaturation').value = 100;
+            document.getElementById('filterGrayscale').value = 0;
+            document.getElementById('filterBlur').value = 0;
+            document.getElementById('filterHue').value = 0;
+            applyFilters();
+            showToast('Filter direset! 🔄');
+        }
+
+        // ===========================
+        // STICKERS
+        // ===========================
+        const stickerList = [
+            '😂', '💀', '🔥', '👀', '😭', '🤣', '😤', '🗿',
+            '💯', '🤡', '👊', '😎', '🥺', '🤯', '👑', '🦍',
+            '⭐', '❤️', '💔', '✨', '🎉', '🤮', '🥵', '🧠',
+            '💪', '🍑', '👁️', '🐒', '🫡', '🤖', '👻', '💩',
+            '🌟', '⚡', '🎯', '🏆'
+        ];
+
+        function loadStickers() {
+            const grid = document.getElementById('stickerGrid');
+            stickerList.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'sticker-btn';
+                btn.textContent = emoji;
+                btn.onclick = () => addSticker(emoji);
+                grid.appendChild(btn);
+            });
+        }
+
+        function addSticker(emoji) {
+            const sticker = document.createElement('div');
+            sticker.className = 'sticker-overlay';
+            const size = document.getElementById('stickerSize').value;
+            sticker.style.fontSize = size + 'px';
+            sticker.textContent = emoji;
+            sticker.style.top = (50 + Math.random() * 100) + 'px';
+            sticker.style.left = (50 + Math.random() * 100) + 'px';
+
+            // Delete button
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-sticker-btn';
+            delBtn.textContent = '✕';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                sticker.remove();
+            };
+            sticker.appendChild(delBtn);
+
+            canvas.appendChild(sticker);
+            makeDraggable(sticker);
+            showToast(`Stiker ${emoji} ditambahkan!`);
+        }
+
+        // ===========================
+        // DOWNLOAD
+        // ===========================
+        function downloadMeme() {
+            showToast('Sedang render meme... ⏳');
+
+            html2canvas(canvas, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#000',
+                scale: 2,
+                logging: false,
+                onclone: (clonedDoc) => {
+                    // Hide placeholder in clone
+                    const ph = clonedDoc.getElementById('placeholderMsg');
+                    if (ph) ph.style.display = 'none';
+                }
+            }).then((renderedCanvas) => {
+                const link = document.createElement('a');
+                link.download = 'meme-zaki-' + Date.now() + '.png';
+                link.href = renderedCanvas.toDataURL('image/png');
+                link.click();
+                showToast('Meme berhasil didownload! 🎉');
+            }).catch(err => {
+                console.error('Download error:', err);
+                showToast('Gagal download, coba gambar lain 😢');
+            });
+        }
+
+        // ===========================
+        // RESET
+        // ===========================
+        function resetCanvas() {
+            // Remove image
+            if (currentImage) {
+                currentImage.remove();
+                currentImage = null;
+            }
+
+            // Remove all text overlays
+            textOverlays.forEach(t => t.el.remove());
+            textOverlays = [];
+            textIdCounter = 0;
+            renderTextList();
+
+            // Remove all stickers
+            canvas.querySelectorAll('.sticker-overlay').forEach(s => s.remove());
+
+            // Reset filters
+            resetFilters();
+
+            // Show placeholder
+            placeholderMsg.style.display = 'block';
+
+            // Reset file input
+            document.getElementById('imageUpload').value = '';
+            document.getElementById('imageUrl').value = '';
+
+            // Add default text overlays
+            addTextOverlay('TEKS ATAS', 'top');
+            addTextOverlay('TEKS BAWAH', 'bottom');
+
+            showToast('Canvas direset! 🗑️');
+        }
+
+        // ===========================
+        // INIT
+        // ===========================
+        function init() {
+            loadTemplates();
+            loadStickers();
+
+            // Add default top and bottom text
+            addTextOverlay('TEKS ATAS', 'top');
+            addTextOverlay('TEKS BAWAH', 'bottom');
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
